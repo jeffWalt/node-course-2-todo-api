@@ -1,10 +1,13 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const {ObjectID} = require("mongodb");
+const _ = require("lodash");
 
 var {mongoose} = require("./db/mongoose");
 var {Todo} = require("./models/todo");
 var {User} = require("./models/user");
+
+const port = process.env.PORT || 3000
 
 var app = express();
 app.use(bodyParser.json()); //Middleware
@@ -45,8 +48,49 @@ app.get("/todos/:id", (req, res) => {
   }).catch((e) => console.log(e))
 });
 
-app.listen(3000, () => {
-  console.log("Listening on port 3000");
+app.delete("/todos/:id", (req, res) => {
+  const id = req.params.id;
+
+  if (!ObjectID.isValid(id)){
+    return res.status(404).send();
+  }
+
+  Todo.findByIdAndRemove(id).then((todo) => {
+    if (!todo){
+      return res.status(404).send();
+    }
+
+    res.send({todo});
+  }, (e) => {
+    res.status(400).send();
+  });
+});
+
+app.patch("/todos/:id", (req, res) => {
+  var id = req.params.id;
+  var body = _.pick(req.body, ["text", "completed"]) // This disallows the user to change the completedAt because we don't include it
+
+  if (!ObjectID.isValid(id)){
+    return res.status(404).send();
+  }
+
+  if (_.isBoolean(body.completed) && body.completed){
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+  
+  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+    if (!todo){
+      return res.status(404).send()
+    }
+    res.send({todo});
+  }).catch((e) => res.status(404).send());
+});
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
 });
 
 module.exports = {app};
