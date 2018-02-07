@@ -1,0 +1,3 @@
+Commands                                  | Comments
+heroku create                             | Create a new heroku app
+heroku addons:create mongolab:sandbox     | Add an addon to our app addonName:Plan
