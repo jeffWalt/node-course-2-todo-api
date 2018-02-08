@@ -91,15 +91,24 @@ app.patch("/todos/:id", (req, res) => {
 });
 
 app.post("/users", (req, res) => {
-  const body = _.pick(req.body, ["email", "password"])
-  const user = new User(body)
+  var body = _.pick(req.body, ["email", "password"]);
+  var user = new User(body);
+  console.log(user)
+  //Model methods
+  //User model
+  //User.findByToken
+
+  //Instance method
+  // user instance
+  // user.generateAuthToken
 
   user.save().then(() => {
-    
     return user.generateAuthToken();
   }).then((token) => {
+    console.log(user)
     res.header("x-auth", token).send(user)
   }).catch((e) => res.status(400).send(e));
+
 });
 
 app.listen(port, () => {
